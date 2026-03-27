@@ -1,15 +1,16 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:my_pokemon_dex/core/pokedex_theme.dart';
+import 'package:my_pokemon_dex/features/pokemon_list/data/pokemon.dart';
 
 class PokemonDetail extends StatelessWidget {
-  final Map<String, dynamic> pokemon;
+  final Pokemon pokemon;
 
   const PokemonDetail({super.key, required this.pokemon});
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor = PokedexTheme.getTypeColor(pokemon['name']);
+    final primaryColor = PokedexTheme.getTypeColor(pokemon.name);
 
     return Scaffold(
       backgroundColor: PokedexTheme.slate950,
@@ -63,14 +64,14 @@ class PokemonDetail extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '#${pokemon['id']}',
+                          '#${pokemon.id}',
                           style: TextStyle(
                             color: primaryColor,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         Text(
-                          pokemon['name'],
+                          pokemon.name,
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 32,
@@ -86,9 +87,9 @@ class PokemonDetail extends StatelessWidget {
 
                 Center(
                   child: Hero(
-                    tag: pokemon['id'],
+                    tag: pokemon.id,
                     child: Image.network(
-                      pokemon['imageUrl'],
+                      pokemon.imageUrl,
                       height: 300,
                       fit: BoxFit.contain,
                     ),

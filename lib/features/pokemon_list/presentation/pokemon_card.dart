@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:my_pokemon_dex/features/pokemon_list/data/pokemon.dart';
 
 class PokemonCard extends StatelessWidget {
-  final Map<String, dynamic> pokemon;
-  final Function(Map<String, dynamic>) onTap;
+  final Pokemon pokemon;
+  final Function(Pokemon) onTap;
 
   const PokemonCard({super.key, required this.pokemon, required this.onTap});
 
@@ -13,7 +14,7 @@ class PokemonCard extends StatelessWidget {
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       clipBehavior: Clip.antiAlias,
-      color: pokemon['backgroundColor'],
+      color: pokemon.backgroundColor,
       child: InkWell(
         onTap: () => onTap(pokemon),
         child: Padding(
@@ -34,9 +35,9 @@ class PokemonCard extends StatelessWidget {
                       margin: const EdgeInsets.all(8),
                     ),
                     Hero(
-                      tag: 'pokemon-image-${pokemon['name']}',
+                      tag: 'pokemon-image-${pokemon.name}',
                       child: CachedNetworkImage(
-                        imageUrl: pokemon['imageUrl'],
+                        imageUrl: pokemon.imageUrl,
                         fit: BoxFit.contain,
                         width: double.infinity,
                         height: double.infinity,
@@ -49,14 +50,14 @@ class PokemonCard extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                '#${pokemon['id']}',
+                pokemon.id,
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Colors.black.withValues(alpha: .6),
                 ),
               ),
               Text(
-                pokemon['name'],
+                pokemon.name,
                 style: Theme.of(
                   context,
                 ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
