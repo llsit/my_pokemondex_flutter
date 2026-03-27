@@ -3,7 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 
 class PokemonCard extends StatelessWidget {
   final Map<String, dynamic> pokemon;
-  final Function(String) onTap;
+  final Function(Map<String, dynamic>) onTap;
 
   const PokemonCard({super.key, required this.pokemon, required this.onTap});
 
@@ -15,7 +15,7 @@ class PokemonCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       color: pokemon['backgroundColor'],
       child: InkWell(
-        onTap: () => onTap(pokemon['name']),
+        onTap: () => onTap(pokemon),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(

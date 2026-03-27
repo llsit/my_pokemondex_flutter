@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'pokemon_card.dart';
 
 class PokemonList extends StatefulWidget {
@@ -83,8 +84,9 @@ class _PokemonListState extends State<PokemonList> {
         itemBuilder: (context, index) {
           return PokemonCard(
             pokemon: pokemonList[index],
-            onTap: (name) {
-              print("Clicked on $name");
+            onTap: (pokemon) {
+              print("Clicked on $pokemon");
+              context.push('/detail',extra: pokemon);
             },
           );
         },
