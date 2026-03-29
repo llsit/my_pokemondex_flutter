@@ -1,9 +1,6 @@
-import 'dart:convert';
-
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:my_pokemon_dex/features/pokemon_detail/data/pokemon_detail_model.dart';
-import 'package:my_pokemon_dex/features/pokemon_detail/presentation/pokemon_detail.dart';
 import 'package:my_pokemon_dex/features/pokemon_list/data/pokemon.dart';
 
 abstract class PokemonRepository {

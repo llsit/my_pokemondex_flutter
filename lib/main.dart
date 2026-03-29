@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:my_pokemon_dex/features/pokemon_detail/presentation/pokemon_detail.dart';
 import './features/pokemon_list/presentation/pokemon_list.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 final GoRouter _router = GoRouter(
