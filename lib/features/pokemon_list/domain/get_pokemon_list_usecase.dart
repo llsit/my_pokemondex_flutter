@@ -1,6 +1,5 @@
+import 'package:my_pokemon_dex/core/data/pokemon_repository.dart';
 import 'package:my_pokemon_dex/features/pokemon_list/data/pokemon.dart';
-
-import '../data/pokemon_repository.dart';
 
 class GetPokemonListUseCase {
   final PokemonRepository repository;

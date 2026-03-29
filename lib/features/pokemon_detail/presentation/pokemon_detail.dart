@@ -1,16 +1,55 @@
 import 'dart:ui';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:my_pokemon_dex/core/data/pokemon_repository.dart';
 import 'package:my_pokemon_dex/core/pokedex_theme.dart';
-import 'package:my_pokemon_dex/features/pokemon_list/data/pokemon.dart';
+import 'package:my_pokemon_dex/features/pokemon_detail/data/pokemon_detail_model.dart';
+import 'package:my_pokemon_dex/features/pokemon_detail/domain/get_pokemon_detail_usecase.dart';
 
-class PokemonDetail extends StatelessWidget {
-  final Pokemon pokemon;
+class PokemonDetail extends StatefulWidget {
+  final String name;
 
-  const PokemonDetail({super.key, required this.pokemon});
+  const PokemonDetail({super.key, required this.name});
+
+  @override
+  State<PokemonDetail> createState() => _PokemonDetailState();
+}
+
+class _PokemonDetailState extends State<PokemonDetail> {
+  late final GetPokemonDetailUseCase _useCase;
+
+  PokemonDetailModel? pokemon;
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+
+    final dio = Dio();
+    final repository = PokemonRepositoryImpl(dio);
+    _useCase = GetPokemonDetailUseCase(repository);
+
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    try {
+      final data = await _useCase.execute(widget.name);
+      setState(() {
+        pokemon = data;
+        isLoading = false;
+      });
+    } catch (e) {
+      debugPrint("Error: $e");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor = PokedexTheme.getTypeColor(pokemon.name);
+    if (isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    final primaryColor = PokedexTheme.getTypeColor(pokemon?.types.first);
 
     return Scaffold(
       backgroundColor: PokedexTheme.slate950,
@@ -64,14 +103,14 @@ class PokemonDetail extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '#${pokemon.id}',
+                          '#${pokemon!.id}',
                           style: TextStyle(
                             color: primaryColor,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         Text(
-                          pokemon.name,
+                          pokemon!.name,
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 32,
@@ -80,16 +119,19 @@ class PokemonDetail extends StatelessWidget {
                         ),
                       ],
                     ),
-                    _TypeBadge(label: "GRASS", color: primaryColor),
+                    _TypeBadge(
+                      label: pokemon!.types.first,
+                      color: primaryColor,
+                    ),
                   ],
                 ),
                 const SizedBox(height: 20),
 
                 Center(
                   child: Hero(
-                    tag: pokemon.id,
+                    tag: pokemon!.id,
                     child: Image.network(
-                      pokemon.imageUrl,
+                      pokemon!.imageUrl,
                       height: 300,
                       fit: BoxFit.contain,
                     ),
@@ -108,9 +150,35 @@ class PokemonDetail extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          _StatMetric(label: "Weight", value: "6.9 kg"),
-                          _StatMetric(label: "Height", value: "0.7 m"),
+                          _StatMetric(
+                            label: "Weight",
+                            value: "${pokemon!.weightInKg} kg",
+                          ),
+                          _StatMetric(
+                            label: "Height",
+                            value: "${pokemon!.heightInMeters} m",
+                          ),
                         ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      _LabelHeader(
+                        icon: Icons.info,
+                        label: "Abilities",
+                        color: primaryColor,
+                      ),
+
+                      Row(
+                        spacing: 8,
+                        children:
+                            pokemon!.abilities
+                                .map(
+                                  (ability) => _AbilityChip(
+                                    ability: ability,
+                                    primaryColor: primaryColor,
+                                  ),
+                                )
+                                .toList(),
                       ),
                     ],
                   ),
@@ -126,20 +194,38 @@ class PokemonDetail extends StatelessWidget {
                       ),
                       _StatBar(
                         label: "HP",
-                        value: 45,
-                        progress: 0.2,
+                        value: pokemon!.hp,
+                        progress: getStatProgress(pokemon!.hp),
                         color: primaryColor,
                       ),
                       _StatBar(
                         label: "ATK",
-                        value: 49,
-                        progress: 0.3,
+                        value: pokemon!.attack,
+                        progress: getStatProgress(pokemon!.attack),
                         color: primaryColor,
                       ),
                       _StatBar(
                         label: "DEF",
-                        value: 49,
-                        progress: 0.3,
+                        value: pokemon!.defense,
+                        progress: getStatProgress(pokemon!.defense),
+                        color: primaryColor,
+                      ),
+                      _StatBar(
+                        label: "SpA",
+                        value: pokemon!.specialAttack,
+                        progress: getStatProgress(pokemon!.specialAttack),
+                        color: primaryColor,
+                      ),
+                      _StatBar(
+                        label: "SpD",
+                        value: pokemon!.specialDefense,
+                        progress: getStatProgress(pokemon!.specialDefense),
+                        color: primaryColor,
+                      ),
+                      _StatBar(
+                        label: "SPD",
+                        value: pokemon!.speed,
+                        progress: getStatProgress(pokemon!.speed),
                         color: primaryColor,
                       ),
                     ],
@@ -312,6 +398,43 @@ class _StatMetric extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+double getStatProgress(int stat) {
+  return stat / 255;
+}
+
+class _AbilityChip extends StatelessWidget {
+  final String ability;
+  final bool isItalic;
+  final Color primaryColor;
+
+  const _AbilityChip({
+    required this.ability,
+    this.isItalic = false,
+    required this.primaryColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      decoration: BoxDecoration(
+        color: primaryColor.withValues(alpha: .5),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        ability,
+        style: TextStyle(
+          color: isItalic ? PokedexTheme.slate400 : Colors.white,
+          fontStyle: isItalic ? FontStyle.italic : FontStyle.normal,
+          fontWeight: FontWeight.w500,
+          fontSize: 12,
+        ),
+      ),
     );
   }
 }

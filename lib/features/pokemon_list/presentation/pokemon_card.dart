@@ -4,7 +4,7 @@ import 'package:my_pokemon_dex/features/pokemon_list/data/pokemon.dart';
 
 class PokemonCard extends StatelessWidget {
   final Pokemon pokemon;
-  final Function(Pokemon) onTap;
+  final Function(String) onTap;
 
   const PokemonCard({super.key, required this.pokemon, required this.onTap});
 
@@ -16,7 +16,7 @@ class PokemonCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       color: pokemon.backgroundColor,
       child: InkWell(
-        onTap: () => onTap(pokemon),
+        onTap: () => onTap(pokemon.name),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(

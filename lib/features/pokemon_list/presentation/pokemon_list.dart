@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:my_pokemon_dex/core/data/pokemon_repository.dart';
 import 'package:my_pokemon_dex/features/pokemon_list/data/pokemon.dart';
-import 'package:my_pokemon_dex/features/pokemon_list/data/pokemon_repository.dart';
 import 'package:my_pokemon_dex/features/pokemon_list/domain/get_pokemon_list_usecase.dart';
 import 'pokemon_card.dart';
 
