@@ -10,20 +10,10 @@ class PokemonPaginationNotifier extends AsyncNotifier<List<Pokemon>> {
 
   @override
   Future<List<Pokemon>> build() async {
-    return _fetchPokemons();
-  }
-
-  Future<List<Pokemon>> _fetchPokemons() async {
     final useCase = ref.read(getPokemonListUseCaseProvider);
-    final newList = await useCase.execute(limit, offset);
-
-    if (newList.isEmpty) {
-      hasMore = false;
-    } else {
-      offset += limit;
-    }
-
-    return [...(state.value ?? []), ...newList];
+    final list = await useCase.execute(limit, offset);
+    offset += limit;
+    return list;
   }
 
   Future<void> loadMore() async {
@@ -31,13 +21,28 @@ class PokemonPaginationNotifier extends AsyncNotifier<List<Pokemon>> {
 
     isLoadingMore = true;
 
-    state = const AsyncLoading();
+    final useCase = ref.read(getPokemonListUseCaseProvider);
+    final newList = await useCase.execute(limit, offset);
 
-    state = await AsyncValue.guard(() async {
-      return _fetchPokemons();
-    });
+    if (newList.isEmpty) {
+      hasMore = false;
+    } else {
+      offset += limit;
+      state = AsyncData([...state.value ?? [], ...newList]);
+    }
 
     isLoadingMore = false;
+  }
+
+  Future<void> refresh() async {
+    offset = 0;
+    hasMore = true;
+
+    final useCase = ref.read(getPokemonListUseCaseProvider);
+    final list = await useCase.execute(limit, offset);
+    offset += limit;
+
+    state = AsyncData(list);
   }
 }
 

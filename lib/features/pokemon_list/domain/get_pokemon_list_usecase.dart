@@ -6,8 +6,8 @@ class GetPokemonListUseCase {
 
   GetPokemonListUseCase(this.repository);
 
-  Future<List<Pokemon>> execute() async {
-    final list = await repository.getPokemonList(10, 0);
+  Future<List<Pokemon>> execute(int limit, int offset) async {
+    final list = await repository.getPokemonList(limit, offset);
     list.sort((a, b) {
       final int idA = int.parse(a.id.replaceAll('#', ''));
       final int idB = int.parse(b.id.replaceAll('#', ''));
