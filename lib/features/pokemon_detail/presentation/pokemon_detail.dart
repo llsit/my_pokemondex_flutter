@@ -408,14 +408,9 @@ double getStatProgress(int stat) {
 
 class _AbilityChip extends StatelessWidget {
   final String ability;
-  final bool isItalic;
   final Color primaryColor;
 
-  const _AbilityChip({
-    required this.ability,
-    this.isItalic = false,
-    required this.primaryColor,
-  });
+  const _AbilityChip({required this.ability, required this.primaryColor});
 
   @override
   Widget build(BuildContext context) {
@@ -429,8 +424,8 @@ class _AbilityChip extends StatelessWidget {
       child: Text(
         ability,
         style: TextStyle(
-          color: isItalic ? PokedexTheme.slate400 : Colors.white,
-          fontStyle: isItalic ? FontStyle.italic : FontStyle.normal,
+          color: Colors.white,
+          fontStyle: FontStyle.normal,
           fontWeight: FontWeight.w500,
           fontSize: 12,
         ),
