@@ -1,241 +1,215 @@
 import 'dart:ui';
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:my_pokemon_dex/core/data/pokemon_repository.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:my_pokemon_dex/core/di/pokemon_provider.dart';
 import 'package:my_pokemon_dex/core/pokedex_theme.dart';
-import 'package:my_pokemon_dex/features/pokemon_detail/data/pokemon_detail_model.dart';
-import 'package:my_pokemon_dex/features/pokemon_detail/domain/get_pokemon_detail_usecase.dart';
 
-class PokemonDetail extends StatefulWidget {
+class PokemonDetail extends ConsumerWidget {
   final String name;
 
   const PokemonDetail({super.key, required this.name});
 
   @override
-  State<PokemonDetail> createState() => _PokemonDetailState();
-}
-
-class _PokemonDetailState extends State<PokemonDetail> {
-  late final GetPokemonDetailUseCase _useCase;
-
-  PokemonDetailModel? pokemon;
-  bool isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-
-    final dio = Dio();
-    final repository = PokemonRepositoryImpl(dio);
-    _useCase = GetPokemonDetailUseCase(repository);
-
-    _loadData();
-  }
-
-  Future<void> _loadData() async {
-    try {
-      final data = await _useCase.execute(widget.name);
-      setState(() {
-        pokemon = data;
-        isLoading = false;
-      });
-    } catch (e) {
-      debugPrint("Error: $e");
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
-    final primaryColor = PokedexTheme.getTypeColor(pokemon?.types.first);
-
-    return Scaffold(
-      backgroundColor: PokedexTheme.slate950,
-      appBar: AppBar(
-        backgroundColor: PokedexTheme.slate950.withValues(alpha: .6),
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: primaryColor),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          'POKÉDEX',
-          style: TextStyle(
-            color: primaryColor,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 4,
-            fontSize: 16,
-          ),
-        ),
-        centerTitle: true,
-      ),
-      body: Stack(
-        children: [
-          Positioned(
-            top: 40,
-            left: MediaQuery.of(context).size.width / 2 - 140,
-            child: Container(
-              width: 280,
-              height: 280,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: PokedexTheme.orange600.withValues(alpha: .15),
-              ),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 50, sigmaY: 50),
-                child: Container(color: Colors.transparent),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final pokemonAsync = ref.watch(pokemonDetailProvider(name));
+    return pokemonAsync.when(
+      data: (pokemonDetail) {
+        final primaryColor = PokedexTheme.getTypeColor(
+          pokemonDetail.types.first,
+        );
+        return Scaffold(
+          backgroundColor: PokedexTheme.slate950,
+          appBar: AppBar(
+            backgroundColor: PokedexTheme.slate950.withValues(alpha: .6),
+            elevation: 0,
+            leading: IconButton(
+              icon: Icon(Icons.arrow_back, color: primaryColor),
+              onPressed: () => Navigator.pop(context),
+            ),
+            title: Text(
+              'POKÉDEX',
+              style: TextStyle(
+                color: primaryColor,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 4,
+                fontSize: 16,
               ),
             ),
+            centerTitle: true,
           ),
+          body: Stack(
+            children: [
+              Positioned(
+                top: 40,
+                left: MediaQuery.of(context).size.width / 2 - 140,
+                child: Container(
+                  width: 280,
+                  height: 280,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: PokedexTheme.orange600.withValues(alpha: .15),
+                  ),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 50, sigmaY: 50),
+                    child: Container(color: Colors.transparent),
+                  ),
+                ),
+              ),
 
-          SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.end,
+              SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Text(
-                          '#${pokemon!.id}',
-                          style: TextStyle(
-                            color: primaryColor,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '#${pokemonDetail!.id}',
+                              style: TextStyle(
+                                color: primaryColor,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              pokemonDetail!.name,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 32,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ],
                         ),
-                        Text(
-                          pokemon!.name,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 32,
-                            fontWeight: FontWeight.w900,
-                          ),
+                        _TypeBadge(
+                          label: pokemonDetail.types.first,
+                          color: primaryColor,
                         ),
                       ],
                     ),
-                    _TypeBadge(
-                      label: pokemon!.types.first,
-                      color: primaryColor,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
+                    const SizedBox(height: 20),
 
-                Center(
-                  child: Hero(
-                    tag: pokemon!.id,
-                    child: Image.network(
-                      pokemon!.imageUrl,
-                      height: 300,
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 32),
-
-                _BentoBox(
-                  child: Column(
-                    children: [
-                      _LabelHeader(
-                        icon: Icons.info,
-                        label: "About",
-                        color: primaryColor,
+                    Center(
+                      child: Hero(
+                        tag: pokemonDetail.id,
+                        child: Image.network(
+                          pokemonDetail.imageUrl,
+                          height: 300,
+                          fit: BoxFit.contain,
+                        ),
                       ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    ),
+                    const SizedBox(height: 32),
+
+                    _BentoBox(
+                      child: Column(
                         children: [
-                          _StatMetric(
-                            label: "Weight",
-                            value: "${pokemon!.weightInKg} kg",
+                          _LabelHeader(
+                            icon: Icons.info,
+                            label: "About",
+                            color: primaryColor,
                           ),
-                          _StatMetric(
-                            label: "Height",
-                            value: "${pokemon!.heightInMeters} m",
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              _StatMetric(
+                                label: "Weight",
+                                value: "${pokemonDetail.weightInKg} kg",
+                              ),
+                              _StatMetric(
+                                label: "Height",
+                                value: "${pokemonDetail.heightInMeters} m",
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+
+                          _LabelHeader(
+                            icon: Icons.info,
+                            label: "Abilities",
+                            color: primaryColor,
+                          ),
+
+                          Row(
+                            spacing: 8,
+                            children:
+                                pokemonDetail.abilities
+                                    .map(
+                                      (ability) => _AbilityChip(
+                                        ability: ability,
+                                        primaryColor: primaryColor,
+                                      ),
+                                    )
+                                    .toList(),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
-
-                      _LabelHeader(
-                        icon: Icons.info,
-                        label: "Abilities",
-                        color: primaryColor,
+                    ),
+                    const SizedBox(height: 16),
+                    _BentoBox(
+                      child: Column(
+                        children: [
+                          _LabelHeader(
+                            icon: Icons.leaderboard,
+                            label: "Base Stats",
+                            color: primaryColor,
+                          ),
+                          _StatBar(
+                            label: "HP",
+                            value: pokemonDetail.hp,
+                            progress: getStatProgress(pokemonDetail.hp),
+                            color: primaryColor,
+                          ),
+                          _StatBar(
+                            label: "ATK",
+                            value: pokemonDetail.attack,
+                            progress: getStatProgress(pokemonDetail.attack),
+                            color: primaryColor,
+                          ),
+                          _StatBar(
+                            label: "DEF",
+                            value: pokemonDetail.defense,
+                            progress: getStatProgress(pokemonDetail.defense),
+                            color: primaryColor,
+                          ),
+                          _StatBar(
+                            label: "SpA",
+                            value: pokemonDetail.specialAttack,
+                            progress: getStatProgress(
+                              pokemonDetail.specialAttack,
+                            ),
+                            color: primaryColor,
+                          ),
+                          _StatBar(
+                            label: "SpD",
+                            value: pokemonDetail.specialDefense,
+                            progress: getStatProgress(
+                              pokemonDetail.specialDefense,
+                            ),
+                            color: primaryColor,
+                          ),
+                          _StatBar(
+                            label: "SPD",
+                            value: pokemonDetail.speed,
+                            progress: getStatProgress(pokemonDetail.speed),
+                            color: primaryColor,
+                          ),
+                        ],
                       ),
-
-                      Row(
-                        spacing: 8,
-                        children:
-                            pokemon!.abilities
-                                .map(
-                                  (ability) => _AbilityChip(
-                                    ability: ability,
-                                    primaryColor: primaryColor,
-                                  ),
-                                )
-                                .toList(),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 16),
-                _BentoBox(
-                  child: Column(
-                    children: [
-                      _LabelHeader(
-                        icon: Icons.leaderboard,
-                        label: "Base Stats",
-                        color: primaryColor,
-                      ),
-                      _StatBar(
-                        label: "HP",
-                        value: pokemon!.hp,
-                        progress: getStatProgress(pokemon!.hp),
-                        color: primaryColor,
-                      ),
-                      _StatBar(
-                        label: "ATK",
-                        value: pokemon!.attack,
-                        progress: getStatProgress(pokemon!.attack),
-                        color: primaryColor,
-                      ),
-                      _StatBar(
-                        label: "DEF",
-                        value: pokemon!.defense,
-                        progress: getStatProgress(pokemon!.defense),
-                        color: primaryColor,
-                      ),
-                      _StatBar(
-                        label: "SpA",
-                        value: pokemon!.specialAttack,
-                        progress: getStatProgress(pokemon!.specialAttack),
-                        color: primaryColor,
-                      ),
-                      _StatBar(
-                        label: "SpD",
-                        value: pokemon!.specialDefense,
-                        progress: getStatProgress(pokemon!.specialDefense),
-                        color: primaryColor,
-                      ),
-                      _StatBar(
-                        label: "SPD",
-                        value: pokemon!.speed,
-                        progress: getStatProgress(pokemon!.speed),
-                        color: primaryColor,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
+      error: (e, stack) => Center(child: Text("Error: $e")),
+      loading: () => const Center(child: CircularProgressIndicator()),
     );
   }
 }
